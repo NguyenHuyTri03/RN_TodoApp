@@ -5,7 +5,7 @@ import HomePage from './components/home';
 export default function App() {
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
       <HomePage />
     </View>

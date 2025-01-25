@@ -1,46 +1,73 @@
 import Checkbox from 'expo-checkbox';
-import * as React from 'react';
+import React, { useEffect, useState } from 'react';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import Task from '../interfaces/Task'
 import { Text, View, StyleSheet, TextInput, TouchableWithoutFeedback, Keyboard, Pressable, FlatList, TouchableOpacity } from 'react-native';
 
 interface HomePage { }
-
-interface Task {
-    id: number,
-    name: string,
-    completed: boolean,
-    date: string
-}
 
 const taskList: Task[] = [
     {
         id: 1,
         name: 'Task 1',
         completed: false,
-        date: '26/01/2025'
     },
     {
         id: 2,
         name: 'Task 2',
         completed: false,
-        date: '26/01/2025'
     },
     {
         id: 3,
         name: 'Task 3',
         completed: false,
-        date: '26/01/2025'
     },
     {
         id: 4,
         name: 'Task 4',
         completed: false,
-        date: '26/01/2025'
     }
 ]
 
 const HomePage = () => {
+    const [tasks, setTasks] = useState(taskList)
+    const [addState, setAddState] = useState(false)
+    const [taskNameState, setTaskName] = useState('')
+
+    const handleCheckbox = (id: number) => {
+        let temp = tasks.map((task) => {
+            if (id === task.id) {
+                return {
+                    ...task,
+                    completed: !task.completed
+                }
+            }
+            return task
+        })
+        setTasks(temp)
+    }
+
+    const handleTaskDelete = (id: number) => {
+
+        let temp = tasks.filter((task) => task.id !== id)
+
+        setTasks(temp)
+    }
+
+    const handleAddTask = (taskName: string) => {
+        setTaskName('')
+        let id: number = tasks.length + 1
+
+        let task = {
+            id: id,
+            name: taskName,
+            completed: false
+        }
+
+        tasks.push(task)
+        setAddState(false)
+    }
 
     return (
         <View style={styles.container}>
@@ -48,42 +75,115 @@ const HomePage = () => {
                 <Text style={styles.title}>Todo App</Text>
             </View>
 
-            <View style={styles.tasksView}>
-                <FlatList
-                    data={taskList}
-                    keyExtractor={item => item.id + ''}
-                    style={{
-                        alignSelf: 'stretch'
-                    }}
-                    renderItem={({ item }) => {
-                        return (
-                            <View style={styles.taskDetail}>
-                                <View style={{ flexDirection: 'row' }}>
-                                    <Checkbox
-                                        style={{ alignSelf: 'center' }}
-                                    />
+            {addState ? (
+                <View style={styles.addTaskView}>
 
-                                    <View>
-                                        <Text style={styles.taskName}>{item.name}</Text>
-                                        <Text style={styles.taskDate}>{item.date}</Text>
+                    <View style={{ flex: 1, alignSelf: 'stretch' }}>
+                        <Text style={{
+                            marginBottom: 10,
+                            marginLeft: 20,
+
+                            color: '#f2f2f2',
+                            fontSize: 25,
+                        }}>Task</Text>
+
+                        <View style={{
+                            flex: 1,
+                            alignSelf: 'stretch',
+                            paddingHorizontal: 20
+                        }}>
+                            <TextInput
+                                style={styles.taskInput}
+                                placeholder='What do you need to do?'
+                                placeholderTextColor='#505050'
+                                value={taskNameState}
+                                onChangeText={setTaskName}
+                            />
+                        </View>
+
+                    </View>
+
+                    <TouchableOpacity
+                        activeOpacity={0.6}
+                        style={styles.taskAddBtn}
+                    >
+                        <Pressable
+                            onPress={() => { handleAddTask(taskNameState) }}>
+                            <Text style={{ color: '#f2f2f2', fontSize: 20 }}>Add task</Text>
+                        </Pressable>
+                    </TouchableOpacity>
+
+                    <View style={{ flex: 3 }}>
+
+                    </View>
+                </View>
+            ) : (
+                <View style={styles.tasksView}>
+                    <FlatList
+                        data={tasks}
+                        keyExtractor={item => item.id + ''}
+                        style={{
+                            alignSelf: 'stretch'
+                        }}
+                        renderItem={({ item }) => {
+                            return (
+                                <View style={styles.taskDetail}>
+                                    <View style={{ flexDirection: 'row' }}>
+                                        <Checkbox
+                                            style={{ alignSelf: 'center', height: 25, width: 25 }}
+                                            value={item.completed}
+                                            onValueChange={() => {
+                                                handleCheckbox(item.id)
+                                            }}
+                                            color={item.completed ? '#2CB897' : undefined}
+                                        />
+
+                                        <View>
+                                            <Text style={[styles.taskName, item.completed && styles.taskNameCompleted]}>{item.name}</Text>
+                                        </View>
                                     </View>
+
+                                    <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-end' }} activeOpacity={0.7} onPress={() => { handleTaskDelete(item.id) }}>
+                                        <Ionicons
+                                            name="trash-outline"
+                                            size={30}
+                                            style={{ color: "#e55143" }}
+                                        />
+                                    </TouchableOpacity>
                                 </View>
+                            )
+                        }}
+                    />
+                </View>
+            )}
 
-                                <Ionicons name="trash-outline" size={30} style={{ color: "#e55143", alignSelf: 'center' }} />
-                            </View>
-                        )
-                    }}
-                />
-            </View>
+            <View style={styles.taskAddBtnView}>
+                {addState ? (
 
-            <View style={styles.taskAddView}>
-                <TouchableOpacity
-                    activeOpacity={0.8}
-                    style={styles.taskAddBtn}
-                >
-                    <Text style={{ fontSize: 25, color: '#f2f2f2' }}>Create task</Text>
-                    <FontAwesome5 name="pen" style={{ paddingLeft: 10, alignSelf: 'center' }} size={24} color="#f2f2f2" />
-                </TouchableOpacity>
+                    <View>
+                        <TouchableOpacity
+                            activeOpacity={0.8}
+                            style={styles.taskCancelBtn}
+                            onPress={() => {
+                                setAddState(!addState)
+                            }}
+                        >
+                            <Text style={{ fontSize: 25, color: '#f2f2f2' }}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                ) : (
+                    <TouchableOpacity
+                        activeOpacity={0.8}
+                        style={styles.taskAddBtn}
+                        onPress={() => {
+                            setAddState(!addState)
+                        }}
+                    >
+                        <Text style={{ fontSize: 25, color: '#f2f2f2' }}>Create task</Text>
+                        <FontAwesome5 name="pen" style={{ paddingLeft: 10, alignSelf: 'center' }} size={24} color="#f2f2f2" />
+                    </TouchableOpacity>
+                )}
             </View>
         </View>
     );
@@ -114,12 +214,19 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingTop: 20
     },
-    taskAddView: {
+    taskAddBtnView: {
         flex: 2,
         alignSelf: 'stretch',
         paddingVertical: 20,
         justifyContent: 'flex-start',
         alignItems: 'center',
+    },
+    addTaskView: {
+        flex: 8,
+        alignSelf: 'stretch',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        paddingTop: 20,
     },
 
     // Miscelaneous
@@ -131,7 +238,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 15,
 
-        fontSize: 25,
+        fontSize: 20,
         color: '#f2f2f2',
         backgroundColor: '#333333',
         borderRadius: 7,
@@ -144,6 +251,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
 
         backgroundColor: '#2CB897',
+        borderRadius: 7,
+        borderWidth: 1,
+        borderColor: '#404040'
+    },
+    taskCancelBtn: {
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        flexDirection: 'row',
+
+        backgroundColor: '#ff3d42',
         borderRadius: 7,
         borderWidth: 1,
         borderColor: '#404040'
@@ -169,28 +286,14 @@ const styles = StyleSheet.create({
         fontSize: 25,
         color: '#f2f2f2'
     },
-    taskDate: {
+    taskNameCompleted: {
         marginLeft: 20,
+        marginBottom: 5,
 
-        fontSize: 20,
-        color: '#606060'
-    }
+        fontSize: 25,
+        color: '#f2f2f2',
+        textDecorationLine: 'line-through'
+    },
+
 });
 
-{/* <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-                    <View style={{
-                        flex: 1,
-                        alignSelf: 'stretch',
-                        paddingHorizontal: 20
-                    }}>
-                        <TextInput
-                            style={styles.taskInput}
-                            placeholder='What do you need to do?'
-                            placeholderTextColor='#505050'
-                        />
-                    </View>
-                </TouchableWithoutFeedback>
-
-                <Pressable>
-
-                </Pressable> */}
